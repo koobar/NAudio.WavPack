@@ -10,13 +10,14 @@ using System.Text;
 
 namespace NAudio.WavPack
 {
-    internal class WavPackReader : WaveStream
+    public class WavPackReader : WaveStream
     {
         // Constant fields.
         private const int WAVPACK_BYTES_PER_SAMPLE = 4;
         private const int WAVPACK_OPEN_WVC = 0x01;
         private const int WAVPACK_OPEN_MAX2CH = 0x08;
         private const int WAVPACK_OPEN_NORMALIZE = 0x10;
+        private const int WAVPACK_OPEN_DSD_AS_PCM = 0x200;
 
         // private fields.
         private IntPtr wavPackContext;
@@ -30,7 +31,15 @@ namespace NAudio.WavPack
         public WavPackReader(string fileName)
         {
             StringBuilder error = new StringBuilder(1024);
-            this.wavPackContext = WavpackOpenFileInput(fileName, error, WAVPACK_OPEN_NORMALIZE | WAVPACK_OPEN_WVC | WAVPACK_OPEN_MAX2CH, 0);
+
+            if (LibraryVersion.Major >= 5)
+            {
+                this.wavPackContext = WavpackOpenFileInput(fileName, error, WAVPACK_OPEN_NORMALIZE | WAVPACK_OPEN_WVC | WAVPACK_OPEN_MAX2CH | WAVPACK_OPEN_DSD_AS_PCM, 0);
+            }
+            else
+            {
+                this.wavPackContext = WavpackOpenFileInput(fileName, error, WAVPACK_OPEN_NORMALIZE | WAVPACK_OPEN_WVC | WAVPACK_OPEN_MAX2CH, 0);
+            }
 
             if (this.wavPackContext == IntPtr.Zero)
             {
@@ -243,18 +252,41 @@ namespace NAudio.WavPack
 
         #region Native methods.
 
-        [DllImport("wavpackdll.dll")] private static extern IntPtr WavpackOpenFileInput(string infilename, StringBuilder error, int flags, int norm_offset);
-        [DllImport("wavpackdll.dll")] private static extern IntPtr WavpackCloseFile(IntPtr wpc);
-        [DllImport("wavpackdll.dll")] private static extern int WavpackGetBitsPerSample(IntPtr wpc);
-        [DllImport("wavpackdll.dll")] private static extern int WavpackGetBytesPerSample(IntPtr wpc);
-        [DllImport("wavpackdll.dll")] private static extern uint WavpackGetLibraryVersion();
-        [DllImport("wavpackdll.dll")] private static extern int WavpackGetVersion(IntPtr wpc);
-        [DllImport("wavpackdll.dll")] private static extern int WavpackGetNumChannels(IntPtr wpc);
-        [DllImport("wavpackdll.dll")] private static extern uint WavpackGetSampleRate(IntPtr wpc);
-        [DllImport("wavpackdll.dll")] private static extern uint WavpackGetNumSamples(IntPtr wpc);
-        [DllImport("wavpackdll.dll")] private static extern uint WavpackGetSampleIndex(IntPtr wpc);
-        [DllImport("wavpackdll.dll")] private static extern bool WavpackSeekSample(IntPtr wpc, uint sample);
-        [DllImport("wavpackdll.dll")] private static extern uint WavpackUnpackSamples(IntPtr wpc, [In, Out] byte[] buffer, uint samples);
+        [DllImport("wavpackdll.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr WavpackOpenFileInput(string infilename, StringBuilder error, int flags, int norm_offset);
+        
+        [DllImport("wavpackdll.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr WavpackCloseFile(IntPtr wpc);
+        
+        [DllImport("wavpackdll.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int WavpackGetBitsPerSample(IntPtr wpc);
+        
+        [DllImport("wavpackdll.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int WavpackGetBytesPerSample(IntPtr wpc);
+        
+        [DllImport("wavpackdll.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern uint WavpackGetLibraryVersion();
+        
+        [DllImport("wavpackdll.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int WavpackGetVersion(IntPtr wpc);
+
+        [DllImport("wavpackdll.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int WavpackGetNumChannels(IntPtr wpc);
+
+        [DllImport("wavpackdll.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern uint WavpackGetSampleRate(IntPtr wpc);
+
+        [DllImport("wavpackdll.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern uint WavpackGetNumSamples(IntPtr wpc);
+
+        [DllImport("wavpackdll.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern uint WavpackGetSampleIndex(IntPtr wpc);
+
+        [DllImport("wavpackdll.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern bool WavpackSeekSample(IntPtr wpc, uint sample);
+
+        [DllImport("wavpackdll.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern uint WavpackUnpackSamples(IntPtr wpc, [In, Out] byte[] buffer, uint samples);
 
         #endregion
     }
