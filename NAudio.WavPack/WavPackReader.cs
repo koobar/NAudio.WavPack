@@ -10,9 +10,9 @@ using System.Text;
 
 namespace NAudio.WavPack
 {
-    public class WavPackReader : WaveStream
+    public class WavPackReader : WaveStream, IWaveProvider
     {
-        // Constant fields.
+        // Constants.
         private const int WAVPACK_BYTES_PER_SAMPLE = 4;
         private const int WAVPACK_OPEN_WVC = 0x01;
         private const int WAVPACK_OPEN_MAX2CH = 0x08;
